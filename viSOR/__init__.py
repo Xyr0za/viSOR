@@ -1,1 +1,1 @@
-from .parser import *
+from .sor import *
