@@ -1,93 +1,100 @@
-# viSOR
 
-A Python parser to read, process, and export Optical Time-Domain Reflectometer (OTDR) data from .sor and .msor files into CSV or TSV formats.
-Features
+# SOR File Parser and Visualizer
 
-    Parse .sor and .msor OTDR raw data files using otdrparser.
+A Python package for parsing SOR/MSOR files (OTDR traces) and CSV files containing X,Y data points, with visualization capabilities.
 
-    Extract and center X (distance) and Y (signal) axis data.
+## Features
 
-    Export parsed data to CSV or TSV files.
+- Parse `.sor` and `.msor` files using `otdrparser`
+- Parse CSV files with X,Y data points
+- Extract and process X,Y data with optional zero-centering adjustment
+- Export processed data to CSV or TSV formats
+- Generate static plots using matplotlib
+- Create interactive visualizations using Plotly
 
-    Simple API with validation of input and output file types.
+## Installation
 
-# Installation
+1. Ensure you have Python 3.7+ installed
+2. Install required dependencies:
+   ```bash
+   pip install otdrparser matplotlib plotly
+   ```
 
-Make sure you have the otdrparser package installed and other dependencies:
+## Usage
 
-``` bash
-pip install otdrparser
+### Basic Usage
+
+```python
+from sor_parser import SOR
+
+# Initialize with a file
+sor = SOR("trace.sor")  # or "data.csv"
+
+# Extract X,Y data (optionally center Y values around zero)
+sor.extract_axis(adjust=True)
+
+# Export to CSV/TSV
+sor.dump("output.csv")
+
+# Generate static plot
+sor.plot("plot.png")
+
+# Create interactive plot
+sor.interactive_plot(
+    title="My OTDR Trace",
+    vertical_lines={"Event1": 1250.3, "Fault": 3456.7},
+    save_path="interactive_plot.html"
+)
 ```
 
-# Usage
+### File Format Support
 
-```py
-from viSOR import Parser
+**Input Formats:**
+- `.sor` - Standard OTDR binary format
+- `.msor` - Modified SOR format
+- `.csv` - Comma-separated X,Y values (with optional header)
 
-# Initialize the parser with an OTDR file path (.sor or .msor)
-parser = Parser("example.sor")
+**Output Formats:**
+- `.csv` - Comma-separated output
+- `.tsv` - Tab-separated output
+- `.png` - Static plot image (via matplotlib)
+- `.html` - Interactive plot (via Plotly)
 
-# Extract X and Y axes data, optionally center the Y values around zero
-parser.extract_axis(adjust=True)
+## API Reference
 
-# Dump the processed data to a CSV or TSV file
-parser.dump("output.csv")
+### `SOR(file_path: str)`
+Main class for parsing and processing files.
 
+**Methods:**
+- `extract_axis(adjust: bool = False)` - Extract X,Y data points
+- `dump(file_name: str)` - Export data to file
+- `plot(file_name: str)` - Generate static plot
+- `interactive_plot()` - Create interactive visualization
+
+## Examples
+
+### Basic Processing
+```python
+sor = SOR("data.sor")
+sor.extract_axis(adjust=True)
+sor.dump("processed_data.tsv")
 ```
-# API Reference
 
-## Parser(file_path: str)
+### Advanced Plotting
+```python
+fig = sor.interactive_plot(
+    title="Network Fiber Inspection",
+    xaxis_title="Distance Along Fiber (m)",
+    yaxis_title="Signal Loss (dB)",
+    vertical_lines={
+        "Splice": 1250.3,
+        "Connector": 3456.7,
+        "Fault": 5021.1
+    },
+    save_path="fiber_inspection.html"
+)
+```
 
-    Initializes the parser by loading and parsing the OTDR file.
+## License
 
-    Validates that the file exists and has a supported extension.
-
-## extract_axis(adjust: bool = False) -> None
-
-    Extracts X and Y axis data from the parsed raw readings.
-
-    If adjust=True, centers the Y values by subtracting the first Y value.
-
-## dump(file_name: str) -> None
-
-    Saves the parsed and processed data into the specified file.
-
-    Supports .csv and .tsv formats.
-
-    Raises an exception for unsupported output file types.
-
-## Supported File Extensions
-
-    Input: .sor, .msor
-
-    Output: .csv, .tsv
-
-# Dependencies
-
-    otdrparser
-
-    Python standard libraries: os.path, typing
-
-# License
-
-MIT License
-
-Copyright (c) 2025 Euan Baldwin
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+[MIT License](LICENSE)
