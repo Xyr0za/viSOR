@@ -1,18 +1,16 @@
 from os.path import isfile
 import os
-
-
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Optional
 import csv
 import otdrparser
 from .dump import dump_csv, dump_tsv
 
 from matplotlib import pyplot as plt
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 accepted_parsing_headers: Tuple[str, ...] = (".sor", ".msor", ".csv")
 accepted_saving_headers: Tuple[str, ...] = (".csv", ".tsv")
-
-
 
 def grab_name(data, name):
 
@@ -21,8 +19,6 @@ def grab_name(data, name):
             return item
 
     return None
-
-
 
 class SOR:
     def __init__(self, file_path: str) -> None:
@@ -109,15 +105,14 @@ class SOR:
 
     def plot(self, file_name: str) -> None:
         """
-        Plots the current raw readings
+        Plots the current raw readings using matplotlib.
 
-        :param file_name:
-        :return:
+        :param file_name: Output filename for the plot
         """
-
         os.makedirs(
-            '/'.join(file_name.split("/")[:-1])
-        , exist_ok=True)
+            '/'.join(file_name.split("/")[:-1]),
+            exist_ok=True
+        )
 
         plt.figure(figsize=(10, 6))
 
@@ -138,3 +133,86 @@ class SOR:
 
         plt.savefig(file_name, dpi=300)
         plt.close()
+
+    def interactive_plot(self,
+                         title: str = "OTDR Trace",
+                         xaxis_title: str = "Distance (m)",
+                         yaxis_title: str = "Attenuation (dB)",
+                         vertical_lines: Optional[Dict[str, float]] = None,
+                         show: bool = True,
+                         save_path: Optional[str] = None) -> go.Figure:
+        """
+        Creates an interactive Plotly visualization of the data with optional vertical lines.
+
+        Args:
+            title: Title of the plot
+            xaxis_title: Label for x-axis
+            yaxis_title: Label for y-axis
+            vertical_lines: Dictionary of {label: x_position} for vertical lines to add
+            show: Whether to immediately show the plot
+            save_path: Optional path to save the HTML file
+
+        Returns:
+            plotly.graph_objects.Figure: The created figure
+        """
+        # Create figure
+        fig = go.Figure()
+
+        # Add main trace
+        fig.add_trace(go.Scatter(
+            x=self.X,
+            y=self.Y,
+            mode='lines',
+            name='OTDR Trace',
+            line=dict(color='royalblue', width=2)
+        ))
+
+        # Add vertical lines if specified
+        if vertical_lines:
+            for label, x_pos in vertical_lines.items():
+                fig.add_vline(
+                    x=x_pos,
+                    line_dash="dash",
+                    line_color="red",
+                    annotation_text=label,
+                    annotation_position="top right"
+                )
+
+        # Update layout
+        fig.update_layout(
+            title=dict(
+                text=title,
+                x=0.5,
+                xanchor='center'
+            ),
+            xaxis_title=xaxis_title,
+            yaxis_title=yaxis_title,
+            hovermode='x unified',
+            template='plotly_white',
+            height=700,
+            margin=dict(l=50, r=50, b=50, t=80, pad=4)
+        )
+
+        # Add range slider with distance-based buttons
+        fig.update_xaxes(
+            rangeslider_visible=True,
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=1000, label="1km", step="all"),
+                    dict(count=5000, label="5km", step="all"),
+                    dict(count=10000, label="10km", step="all"),
+                    dict(step="all")
+                ])
+            )
+        )
+
+        # Save if path provided
+        if save_path:
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            fig.write_html(save_path)
+
+        # Show if requested
+        if show:
+            fig.show()
+
+        return fig
